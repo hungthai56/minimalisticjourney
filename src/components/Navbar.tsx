@@ -1,19 +1,10 @@
 
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
-import { Menu, X } from "lucide-react";
-
-const navLinks = [
-  { path: "/", label: "Home" },
-  { path: "/about", label: "About" },
-  { path: "/projects", label: "Projects" },
-  { path: "/blog", label: "Blog" },
-  { path: "/contact", label: "Contact" },
-];
+import { Bell, Menu, X } from "lucide-react";
 
 export const Navbar = () => {
-  const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -27,51 +18,45 @@ export const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Close mobile menu when changing routes
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [location]);
-
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled || mobileMenuOpen
-          ? "py-4 backdrop-blur-md bg-background/90 shadow-sm"
-          : "py-6 bg-transparent"
+          ? "py-3 backdrop-blur-md bg-background/90 shadow-sm"
+          : "py-4 bg-background"
       }`}
     >
-      <div className="container max-w-5xl mx-auto px-6 flex items-center justify-between">
+      <div className="container max-w-full mx-auto px-6 flex items-center justify-between">
         <Link 
           to="/" 
           className="text-xl font-medium tracking-tight hover:opacity-80 transition-opacity duration-200"
           aria-label="Home"
         >
-          Personal
+          Quản lý Nhân sự
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={`nav-link ${
-                location.pathname === link.path ? "nav-link-active" : ""
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
+        <div className="flex items-center space-x-4">
+          <button className="relative p-2 rounded-full hover:bg-accent transition-colors">
+            <Bell size={20} />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
+          </button>
+          
           <ThemeToggle />
-        </nav>
+          
+          <div className="hidden md:flex items-center space-x-2">
+            <div className="text-sm text-right">
+              <p className="font-medium">Nguyễn Văn A</p>
+              <p className="text-xs text-muted-foreground">Admin</p>
+            </div>
+            <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-medium">
+              NA
+            </div>
+          </div>
 
-        {/* Mobile Navigation Toggle */}
-        <div className="flex items-center space-x-4 md:hidden">
-          <ThemeToggle />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-1 text-foreground"
-            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            className="p-2 text-foreground md:hidden"
+            aria-label={mobileMenuOpen ? "Đóng menu" : "Mở menu"}
           >
             {mobileMenuOpen ? (
               <X className="h-6 w-6" />
@@ -81,27 +66,6 @@ export const Navbar = () => {
           </button>
         </div>
       </div>
-
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <nav className="bg-background/95 backdrop-blur-md md:hidden py-6 px-6 animate-slide-down">
-          <div className="flex flex-col space-y-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`text-lg ${
-                  location.pathname === link.path
-                    ? "text-foreground font-medium"
-                    : "text-foreground/70"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-        </nav>
-      )}
     </header>
   );
 };
