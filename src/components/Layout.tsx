@@ -1,21 +1,19 @@
 
-import { ReactNode } from "react";
+import { Outlet } from "react-router-dom";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
 import { PageTransition } from "./PageTransition";
 
-interface LayoutProps {
-  children: ReactNode;
-}
-
-export const Layout = ({ children }: LayoutProps) => {
+export const Layout = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <div className="flex flex-grow">
         <Sidebar />
         <main className="flex-grow pt-24 px-4 md:px-6">
-          <PageTransition>{children}</PageTransition>
+          <PageTransition>
+            <Outlet />
+          </PageTransition>
         </main>
       </div>
       <footer className="py-6 mt-10 border-t border-border">
