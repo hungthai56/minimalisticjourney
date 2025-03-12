@@ -32,6 +32,7 @@ import {
   Filter 
 } from "lucide-react";
 import { AddEmployeeDialog, EmployeeFormData } from "@/components/AddEmployeeDialog";
+import { EditEmployeeDialog } from "@/components/EditEmployeeDialog";
 import { useToast } from "@/hooks/use-toast";
 
 // Kiểu dữ liệu cho nhân viên
@@ -81,6 +82,21 @@ const Employees = () => {
     };
     
     setEmployeeData(prev => [...prev, employee]);
+  };
+
+  const handleUpdateEmployee = (id: number, updatedEmployee: EmployeeFormData) => {
+    setEmployeeData(prev => 
+      prev.map(employee => 
+        employee.id === id 
+          ? { 
+              ...employee, 
+              name: updatedEmployee.name,
+              position: updatedEmployee.position,
+              department: updatedEmployee.department
+            } 
+          : employee
+      )
+    );
   };
 
   const handleDeleteEmployee = (id: number) => {
@@ -166,9 +182,17 @@ const Employees = () => {
                               <FileText className="h-4 w-4 mr-2" />
                               Chi tiết
                             </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Chỉnh sửa
+                            <DropdownMenuItem asChild>
+                              <EditEmployeeDialog 
+                                employee={employee} 
+                                onUpdateEmployee={handleUpdateEmployee}
+                                trigger={
+                                  <div className="flex items-center w-full cursor-default">
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Chỉnh sửa
+                                  </div>
+                                }
+                              />
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               className="text-destructive"
