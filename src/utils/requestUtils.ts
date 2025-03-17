@@ -1,17 +1,7 @@
 
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
-
-interface Request {
-  id: number;
-  employeeName: string;
-  type: string;
-  startDate: string;
-  endDate: string;
-  reason: string;
-  status: "pending" | "approved" | "rejected";
-  createdAt: string;
-}
+import { Request } from "@/types/request";
 
 export const createNewRequest = (
   requestData: {
