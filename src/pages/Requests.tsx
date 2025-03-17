@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Card, 
@@ -43,9 +42,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
-// Dữ liệu mẫu
-const requestsData = [
+interface Request {
+  id: number;
+  employeeName: string;
+  type: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+}
+
+const initialRequestsData: Request[] = [
   { 
     id: 1, 
     employeeName: "Nguyễn Văn A", 
@@ -98,7 +108,15 @@ const requestsData = [
   },
 ];
 
-const RequestCard = ({ request }: { request: typeof requestsData[0] }) => {
+const RequestCard = ({ 
+  request, 
+  onApprove, 
+  onReject 
+}: { 
+  request: Request; 
+  onApprove: (id: number) => void; 
+  onReject: (id: number) => void;
+}) => {
   return (
     <Card className="overflow-hidden">
       <div className={cn(
@@ -141,11 +159,20 @@ const RequestCard = ({ request }: { request: typeof requestsData[0] }) => {
           <span className="text-xs text-muted-foreground">Tạo lúc: {request.createdAt}</span>
           {request.status === "pending" && (
             <div className="flex space-x-2">
-              <Button size="sm" variant="outline" className="h-8">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="h-8"
+                onClick={() => onReject(request.id)}
+              >
                 <XCircle className="h-3 w-3 mr-1" />
                 Từ chối
               </Button>
-              <Button size="sm" className="h-8">
+              <Button 
+                size="sm" 
+                className="h-8"
+                onClick={() => onApprove(request.id)}
+              >
                 <CheckCircle2 className="h-3 w-3 mr-1" />
                 Duyệt
               </Button>
@@ -160,6 +187,8 @@ const RequestCard = ({ request }: { request: typeof requestsData[0] }) => {
 const Requests = () => {
   const [tab, setTab] = useState("all");
   const [openNewRequestDialog, setOpenNewRequestDialog] = useState(false);
+  const [requestsData, setRequestsData] = useState<Request[]>(initialRequestsData);
+  const { toast } = useToast();
   
   const filteredRequests = requestsData.filter(request => {
     if (tab === "all") return true;
@@ -168,6 +197,35 @@ const Requests = () => {
     if (tab === "rejected") return request.status === "rejected";
     return true;
   });
+
+  const handleApproveRequest = (id: number) => {
+    setRequestsData(prev => 
+      prev.map(request => 
+        request.id === id 
+          ? { ...request, status: "approved" } 
+          : request
+      )
+    );
+    toast({
+      title: "Đã duyệt yêu cầu",
+      description: "Yêu cầu đã được duyệt thành công.",
+    });
+  };
+
+  const handleRejectRequest = (id: number) => {
+    setRequestsData(prev => 
+      prev.map(request => 
+        request.id === id 
+          ? { ...request, status: "rejected" } 
+          : request
+      )
+    );
+    toast({
+      title: "Đã từ chối yêu cầu",
+      description: "Yêu cầu đã bị từ chối.",
+      variant: "destructive",
+    });
+  };
 
   return (
     <div className="container max-w-7xl mx-auto mt-8">
@@ -265,7 +323,12 @@ const Requests = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredRequests.length > 0 ? (
               filteredRequests.map(request => (
-                <RequestCard key={request.id} request={request} />
+                <RequestCard 
+                  key={request.id} 
+                  request={request} 
+                  onApprove={handleApproveRequest}
+                  onReject={handleRejectRequest}
+                />
               ))
             ) : (
               <Card className="col-span-full">
@@ -287,7 +350,12 @@ const Requests = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredRequests.length > 0 ? (
               filteredRequests.map(request => (
-                <RequestCard key={request.id} request={request} />
+                <RequestCard 
+                  key={request.id} 
+                  request={request} 
+                  onApprove={handleApproveRequest}
+                  onReject={handleRejectRequest}
+                />
               ))
             ) : (
               <Card className="col-span-full">
@@ -309,7 +377,12 @@ const Requests = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredRequests.length > 0 ? (
               filteredRequests.map(request => (
-                <RequestCard key={request.id} request={request} />
+                <RequestCard 
+                  key={request.id} 
+                  request={request}
+                  onApprove={handleApproveRequest}
+                  onReject={handleRejectRequest} 
+                />
               ))
             ) : (
               <Card className="col-span-full">
@@ -331,7 +404,12 @@ const Requests = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredRequests.length > 0 ? (
               filteredRequests.map(request => (
-                <RequestCard key={request.id} request={request} />
+                <RequestCard 
+                  key={request.id} 
+                  request={request}
+                  onApprove={handleApproveRequest}
+                  onReject={handleRejectRequest} 
+                />
               ))
             ) : (
               <Card className="col-span-full">

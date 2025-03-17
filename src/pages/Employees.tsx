@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { 
   Card, 
@@ -33,6 +32,7 @@ import {
 } from "lucide-react";
 import { AddEmployeeDialog, EmployeeFormData } from "@/components/AddEmployeeDialog";
 import { EditEmployeeDialog } from "@/components/EditEmployeeDialog";
+import { EmployeeDetailsDialog } from "@/components/EmployeeDetailsDialog";
 import { useToast } from "@/hooks/use-toast";
 
 // Kiểu dữ liệu cho nhân viên
@@ -178,9 +178,16 @@ const Employees = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <FileText className="h-4 w-4 mr-2" />
-                              Chi tiết
+                            <DropdownMenuItem asChild>
+                              <EmployeeDetailsDialog 
+                                employee={employee}
+                                trigger={
+                                  <div className="flex items-center w-full cursor-default">
+                                    <FileText className="h-4 w-4 mr-2" />
+                                    Chi tiết
+                                  </div>
+                                }
+                              />
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                               <EditEmployeeDialog 
