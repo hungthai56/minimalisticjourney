@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Edit, Trash2, FileText } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, FileText, Clock, Calendar } from "lucide-react";
 import { Employee } from "@/types/employee";
 import { EditEmployeeDialog } from "@/components/EditEmployeeDialog";
 import { EmployeeDetailsDialog } from "@/components/EmployeeDetailsDialog";
@@ -39,8 +39,20 @@ export const EmployeeTable = ({
             <TableHead>Họ và tên</TableHead>
             <TableHead>Vị trí</TableHead>
             <TableHead>Phòng ban</TableHead>
-            <TableHead>Ngày vào làm</TableHead>
+            <TableHead className="hidden md:table-cell">Ngày vào làm</TableHead>
             <TableHead>Trạng thái</TableHead>
+            <TableHead className="hidden lg:table-cell">
+              <div className="flex items-center">
+                <Calendar className="h-4 w-4 mr-1" />
+                Phép còn
+              </div>
+            </TableHead>
+            <TableHead className="hidden lg:table-cell">
+              <div className="flex items-center">
+                <Clock className="h-4 w-4 mr-1" />
+                Giờ làm
+              </div>
+            </TableHead>
             <TableHead className="text-right">Thao tác</TableHead>
           </TableRow>
         </TableHeader>
@@ -51,7 +63,7 @@ export const EmployeeTable = ({
                 <TableCell className="font-medium">{employee.name}</TableCell>
                 <TableCell>{employee.position}</TableCell>
                 <TableCell>{employee.department}</TableCell>
-                <TableCell>{employee.joinDate}</TableCell>
+                <TableCell className="hidden md:table-cell">{employee.joinDate}</TableCell>
                 <TableCell>
                   <span className={`px-2 py-1 text-xs rounded-full ${
                     employee.status === "Đang làm việc" 
@@ -60,6 +72,24 @@ export const EmployeeTable = ({
                   }`}>
                     {employee.status}
                   </span>
+                </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                  <span className={`font-medium ${
+                    (employee.remainingLeaveDays || 0) > 0 
+                      ? "text-blue-600" 
+                      : "text-gray-500"
+                  }`}>
+                    {employee.remainingLeaveDays || 0} ngày
+                  </span>
+                </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                  {employee.status === "Đang làm việc" ? (
+                    <span className="text-sm">
+                      {employee.entryTime} - {employee.exitTime}
+                    </span>
+                  ) : (
+                    <span className="text-sm text-gray-500">-</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
@@ -107,7 +137,7 @@ export const EmployeeTable = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+              <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
                 Không tìm thấy nhân viên nào
               </TableCell>
             </TableRow>

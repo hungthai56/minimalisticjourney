@@ -12,22 +12,47 @@ import { useToast } from "@/hooks/use-toast";
 import { Employee, initialEmployeeData } from "@/types/employee";
 import { EmployeeSearch } from "@/components/employees/EmployeeSearch";
 import { EmployeeTable } from "@/components/employees/EmployeeTable";
-import { createEmployee, updateEmployee, filterEmployees } from "@/utils/employeeUtils";
+import { EmployeePagination } from "@/components/employees/EmployeePagination";
+import { createEmployee, updateEmployee, filterEmployees, paginateEmployees } from "@/utils/employeeUtils";
 
 const Employees = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const [employeeData, setEmployeeData] = useState<Employee[]>(initialEmployeeData);
   const { toast } = useToast();
   
-  const filteredEmployees = filterEmployees(employeeData, searchTerm);
+  const itemsPerPage = 5; // Number of employees per page
+  
+  // Apply filters
+  const filteredEmployees = filterEmployees(employeeData, searchTerm, statusFilter);
+  
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+  
+  // Reset to page 1 when filters change
+  if (filteredEmployees.length > 0 && currentPage > totalPages) {
+    setCurrentPage(1);
+  }
+  
+  // Paginate the filtered employees
+  const paginatedEmployees = paginateEmployees(filteredEmployees, currentPage, itemsPerPage);
 
   const handleAddEmployee = (newEmployee: EmployeeFormData) => {
     const employee = createEmployee(newEmployee, employeeData);
     setEmployeeData(prev => [...prev, employee]);
+    toast({
+      title: "Thêm nhân viên thành công",
+      description: `Đã thêm ${newEmployee.name} vào hệ thống.`
+    });
   };
 
   const handleUpdateEmployee = (id: number, updatedEmployee: EmployeeFormData) => {
     setEmployeeData(prev => updateEmployee(prev, id, updatedEmployee));
+    toast({
+      title: "Cập nhật thành công",
+      description: "Thông tin nhân viên đã được cập nhật."
+    });
   };
 
   const handleDeleteEmployee = (id: number) => {
@@ -36,6 +61,17 @@ const Employees = () => {
       title: "Xóa nhân viên thành công",
       description: "Đã xóa nhân viên khỏi hệ thống"
     });
+  };
+
+  // Handle filter changes
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter(status);
+    setCurrentPage(1); // Reset to first page when filter changes
+  };
+
+  // Handle page changes
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -57,13 +93,21 @@ const Employees = () => {
         <CardContent>
           <EmployeeSearch 
             searchTerm={searchTerm} 
-            onSearchChange={setSearchTerm} 
+            onSearchChange={setSearchTerm}
+            statusFilter={statusFilter}
+            onStatusFilterChange={handleStatusFilterChange}
           />
           
           <EmployeeTable 
-            employees={filteredEmployees}
+            employees={paginatedEmployees}
             onUpdateEmployee={handleUpdateEmployee}
             onDeleteEmployee={handleDeleteEmployee}
+          />
+          
+          <EmployeePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
           />
         </CardContent>
       </Card>

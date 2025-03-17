@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { 
   Card, 
   CardContent,
@@ -19,8 +20,9 @@ import {
   Clock, 
   PlusCircle,
   CalendarRange,
-  ExternalLink,
-  ArrowLeftRight
+  FileDown,
+  ArrowLeftRight,
+  Calendar
 } from "lucide-react";
 import {
   Dialog,
@@ -30,6 +32,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +46,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { createNewRequest, exportRequestsToExcel } from "@/utils/requestUtils";
 
 interface Request {
   id: number;
@@ -190,6 +194,80 @@ const Requests = () => {
   const [requestsData, setRequestsData] = useState<Request[]>(initialRequestsData);
   const { toast } = useToast();
   
+  // New request form state
+  const [newRequest, setNewRequest] = useState({
+    employeeName: "Nguyễn Văn A", // Default employee
+    type: "leave",
+    startDate: "",
+    endDate: "",
+    reason: ""
+  });
+  
+  // Format date for input fields
+  const formatDateForInput = (date = new Date()) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  // Set default dates when dialog opens
+  useEffect(() => {
+    if (openNewRequestDialog) {
+      const today = new Date();
+      setNewRequest(prev => ({
+        ...prev,
+        startDate: formatDateForInput(today),
+        endDate: formatDateForInput(today)
+      }));
+    }
+  }, [openNewRequestDialog]);
+  
+  // Handle form changes
+  const handleRequestFormChange = (
+    field: string, 
+    value: string
+  ) => {
+    setNewRequest(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  // Submit new request
+  const handleSubmitRequest = () => {
+    // Format dates to DD/MM/YYYY
+    const formatDisplayDate = (dateString: string) => {
+      const [year, month, day] = dateString.split('-');
+      return `${day}/${month}/${year}`;
+    };
+    
+    const formattedRequest = {
+      ...newRequest,
+      startDate: formatDisplayDate(newRequest.startDate),
+      endDate: formatDisplayDate(newRequest.endDate),
+      type: newRequest.type === "leave" ? "Nghỉ phép" : "Ra ngoài"
+    };
+    
+    const createdRequest = createNewRequest(formattedRequest, requestsData);
+    setRequestsData(prev => [createdRequest, ...prev]);
+    
+    setOpenNewRequestDialog(false);
+    toast({
+      title: "Tạo yêu cầu thành công",
+      description: "Yêu cầu của bạn đã được gửi và đang chờ duyệt."
+    });
+  };
+  
+  // Export requests to Excel
+  const handleExportReport = () => {
+    exportRequestsToExcel(filteredRequests, `requests-report-${tab}`);
+    toast({
+      title: "Xuất báo cáo thành công",
+      description: "Báo cáo đã được tải xuống."
+    });
+  };
+  
   const filteredRequests = requestsData.filter(request => {
     if (tab === "all") return true;
     if (tab === "pending") return request.status === "pending";
@@ -248,7 +326,10 @@ const Requests = () => {
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <Label htmlFor="request-type">Loại yêu cầu</Label>
-                <Select defaultValue="leave">
+                <Select 
+                  value={newRequest.type}
+                  onValueChange={(value) => handleRequestFormChange("type", value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Chọn loại yêu cầu" />
                   </SelectTrigger>
@@ -262,38 +343,55 @@ const Requests = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="start-date">Ngày bắt đầu</Label>
-                  <Input id="start-date" type="date" />
+                  <Input 
+                    id="start-date" 
+                    type="date" 
+                    value={newRequest.startDate}
+                    onChange={(e) => handleRequestFormChange("startDate", e.target.value)}
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="end-date">Ngày kết thúc</Label>
-                  <Input id="end-date" type="date" />
+                  <Input 
+                    id="end-date" 
+                    type="date" 
+                    value={newRequest.endDate}
+                    onChange={(e) => handleRequestFormChange("endDate", e.target.value)}
+                  />
                 </div>
               </div>
               
               <div className="grid gap-2">
                 <Label htmlFor="reason">Lý do</Label>
-                <Textarea id="reason" placeholder="Nhập lý do..." />
+                <Textarea 
+                  id="reason" 
+                  placeholder="Nhập lý do..." 
+                  value={newRequest.reason}
+                  onChange={(e) => handleRequestFormChange("reason", e.target.value)}
+                />
               </div>
+              
+              {newRequest.type === "leave" && (
+                <div className="py-2 px-3 bg-blue-50 rounded-md flex items-center">
+                  <Calendar className="h-5 w-5 text-blue-500 mr-2" />
+                  <div className="text-sm text-blue-700">
+                    <p className="font-medium">Số ngày phép còn lại: 10 ngày</p>
+                  </div>
+                </div>
+              )}
             </div>
             <DialogFooter>
-              <Button 
-                variant="outline" 
-                onClick={() => setOpenNewRequestDialog(false)}
-              >
-                Hủy
-              </Button>
-              <Button 
-                onClick={() => setOpenNewRequestDialog(false)}
-              >
-                Gửi yêu cầu
-              </Button>
+              <DialogClose asChild>
+                <Button variant="outline">Hủy</Button>
+              </DialogClose>
+              <Button onClick={handleSubmitRequest}>Gửi yêu cầu</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
       
       <Tabs defaultValue="all" value={tab} onValueChange={setTab}>
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
           <TabsList>
             <TabsTrigger value="all" className="flex items-center">
               <ArrowLeftRight className="h-4 w-4 mr-2" />
@@ -313,8 +411,8 @@ const Requests = () => {
             </TabsTrigger>
           </TabsList>
           
-          <Button variant="outline" size="sm">
-            <ExternalLink className="h-4 w-4 mr-2" />
+          <Button variant="outline" size="sm" onClick={handleExportReport}>
+            <FileDown className="h-4 w-4 mr-2" />
             Xuất báo cáo
           </Button>
         </div>

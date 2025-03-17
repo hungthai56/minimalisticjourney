@@ -40,11 +40,29 @@ export const updateEmployee = (
 
 export const filterEmployees = (
   employees: Employee[], 
-  searchTerm: string
+  searchTerm: string,
+  statusFilter: string
 ): Employee[] => {
-  return employees.filter(employee => 
-    employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.department.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  return employees.filter(employee => {
+    const matchesSearch = 
+      employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.department.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = 
+      statusFilter === "all" ? true : 
+      statusFilter === "active" ? employee.status === "Đang làm việc" :
+      statusFilter === "inactive" ? employee.status === "Nghỉ việc" : true;
+    
+    return matchesSearch && matchesStatus;
+  });
+};
+
+export const paginateEmployees = (
+  employees: Employee[],
+  currentPage: number,
+  itemsPerPage: number
+): Employee[] => {
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  return employees.slice(startIndex, startIndex + itemsPerPage);
 };
