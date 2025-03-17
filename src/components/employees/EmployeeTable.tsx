@@ -14,22 +14,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Edit, Trash2, FileText, Clock, Calendar } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, FileText, Clock, Calendar, CalendarDays } from "lucide-react";
 import { Employee } from "@/types/employee";
 import { EditEmployeeDialog } from "@/components/EditEmployeeDialog";
 import { EmployeeDetailsDialog } from "@/components/EmployeeDetailsDialog";
 import { EmployeeFormData } from "@/components/AddEmployeeDialog";
+import { EditLeaveDaysDialog } from "./EditLeaveDaysDialog";
 
 type EmployeeTableProps = {
   employees: Employee[];
   onUpdateEmployee: (id: number, employee: EmployeeFormData) => void;
   onDeleteEmployee: (id: number) => void;
+  onUpdateLeaveDays: (id: number, leaveDays: number) => void;
 };
 
 export const EmployeeTable = ({ 
   employees, 
   onUpdateEmployee, 
-  onDeleteEmployee 
+  onDeleteEmployee,
+  onUpdateLeaveDays
 }: EmployeeTableProps) => {
   return (
     <div className="rounded-md border">
@@ -123,6 +126,20 @@ export const EmployeeTable = ({
                           }
                         />
                       </DropdownMenuItem>
+                      {employee.status === "Đang làm việc" && (
+                        <DropdownMenuItem asChild>
+                          <EditLeaveDaysDialog
+                            employee={employee}
+                            onUpdateLeaveDays={onUpdateLeaveDays}
+                            trigger={
+                              <div className="flex items-center w-full cursor-default">
+                                <CalendarDays className="h-4 w-4 mr-2" />
+                                Cập nhật ngày phép
+                              </div>
+                            }
+                          />
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem 
                         className="text-destructive"
                         onClick={() => onDeleteEmployee(employee.id)}

@@ -9,6 +9,8 @@ export const createNewRequest = (
     type: string;
     startDate: string;
     endDate: string;
+    startTime?: string;
+    endTime?: string;
     reason: string;
   }, 
   existingRequests: Request[]
@@ -22,6 +24,8 @@ export const createNewRequest = (
     type: requestData.type,
     startDate: requestData.startDate,
     endDate: requestData.endDate,
+    startTime: requestData.startTime,
+    endTime: requestData.endTime,
     reason: requestData.reason,
     status: "pending",
     createdAt: formattedDate
@@ -36,10 +40,14 @@ export const exportRequestsToExcel = (requests: Request[], fileName: string = "r
     'Loại yêu cầu': request.type,
     'Ngày bắt đầu': request.startDate,
     'Ngày kết thúc': request.endDate,
+    'Giờ bắt đầu': request.startTime || '',
+    'Giờ kết thúc': request.endTime || '',
     'Lý do': request.reason,
     'Trạng thái': request.status === "pending" ? "Đang chờ" : 
                   request.status === "approved" ? "Đã duyệt" : "Từ chối",
     'Ngày tạo': request.createdAt,
+    'Thời gian duyệt/từ chối': request.actionTime || '',
+    'Người duyệt/từ chối': request.actionBy || '',
   }));
 
   // Create a worksheet
@@ -52,9 +60,13 @@ export const exportRequestsToExcel = (requests: Request[], fileName: string = "r
     { wch: 15 }, // Loại yêu cầu
     { wch: 15 }, // Ngày bắt đầu
     { wch: 15 }, // Ngày kết thúc
+    { wch: 15 }, // Giờ bắt đầu
+    { wch: 15 }, // Giờ kết thúc
     { wch: 30 }, // Lý do
     { wch: 15 }, // Trạng thái
     { wch: 15 }, // Ngày tạo
+    { wch: 20 }, // Thời gian duyệt/từ chối
+    { wch: 20 }, // Người duyệt/từ chối
   ];
   worksheet['!cols'] = columnWidths;
 

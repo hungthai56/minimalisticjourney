@@ -2,18 +2,8 @@
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, XCircle, Clock, CalendarRange } from "lucide-react";
-
-interface Request {
-  id: number;
-  employeeName: string;
-  type: string;
-  startDate: string;
-  endDate: string;
-  reason: string;
-  status: "pending" | "approved" | "rejected";
-  createdAt: string;
-}
+import { CheckCircle2, XCircle, Clock, CalendarRange, Timer } from "lucide-react";
+import { Request } from "@/types/request";
 
 interface RequestCardProps {
   request: Request;
@@ -55,10 +45,31 @@ export const RequestCard = ({ request, onApprove, onReject }: RequestCardProps) 
               {request.startDate} {request.endDate !== request.startDate ? `→ ${request.endDate}` : ""}
             </span>
           </div>
+          
+          <div className="flex items-center text-sm">
+            <Timer className="h-4 w-4 mr-2 text-muted-foreground" />
+            <span>
+              {request.startTime} → {request.endTime}
+            </span>
+          </div>
+          
           <div className="border-l-2 pl-4 py-1 text-sm">
             {request.reason}
           </div>
         </div>
+        
+        {(request.status === "approved" || request.status === "rejected") && request.actionTime && (
+          <div className="bg-gray-50 p-2 rounded-md text-xs mb-4">
+            <p>
+              <span className="font-medium">
+                {request.status === "approved" ? "Duyệt bởi" : "Từ chối bởi"}:
+              </span> {request.actionBy}
+            </p>
+            <p>
+              <span className="font-medium">Thời gian:</span> {request.actionTime}
+            </p>
+          </div>
+        )}
         
         <div className="flex justify-between pt-4 border-t">
           <span className="text-xs text-muted-foreground">Tạo lúc: {request.createdAt}</span>

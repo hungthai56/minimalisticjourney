@@ -17,7 +17,10 @@ export const createEmployee = (
     position: employeeData.position,
     department: employeeData.department,
     joinDate: formatDate(),
-    status: "Đang làm việc"
+    status: "Đang làm việc",
+    remainingLeaveDays: 12, // Mặc định 12 ngày phép cho nhân viên mới
+    entryTime: "08:00",
+    exitTime: "17:30"
   };
 };
 
@@ -34,6 +37,21 @@ export const updateEmployee = (
           position: updatedEmployee.position,
           department: updatedEmployee.department
         } 
+      : employee
+  );
+};
+
+export const updateEmployeeLeaveDays = (
+  employees: Employee[],
+  id: number,
+  leaveDays: number
+): Employee[] => {
+  return employees.map(employee =>
+    employee.id === id
+      ? {
+          ...employee,
+          remainingLeaveDays: leaveDays
+        }
       : employee
   );
 };

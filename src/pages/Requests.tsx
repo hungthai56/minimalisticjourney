@@ -36,7 +36,7 @@ const Requests = () => {
   const { toast } = useToast();
   
   // Submit new request
-  const handleSubmitRequest = () => {
+  const handleSubmitRequest = (formData: any) => {
     // Format dates to DD/MM/YYYY
     const formatDisplayDate = (dateString: string) => {
       const [year, month, day] = dateString.split('-');
@@ -44,11 +44,13 @@ const Requests = () => {
     };
     
     const formattedRequest = {
-      employeeName: "Nguyễn Văn A", // Default employee
-      type: "leave" === "leave" ? "Nghỉ phép" : "Ra ngoài",
-      startDate: formatDisplayDate(new Date().toISOString().split('T')[0]),
-      endDate: formatDisplayDate(new Date().toISOString().split('T')[0]),
-      reason: "Nghỉ phép thường niên"
+      employeeName: formData.employeeName,
+      type: formData.type === "leave" ? "Nghỉ phép" : "Ra ngoài",
+      startDate: formatDisplayDate(formData.startDate),
+      endDate: formatDisplayDate(formData.endDate),
+      startTime: formData.startTime,
+      endTime: formData.endTime,
+      reason: formData.reason
     };
     
     const createdRequest = createNewRequest(formattedRequest, requestsData);
@@ -78,11 +80,28 @@ const Requests = () => {
     return true;
   });
 
+  // Lấy ngày giờ hiện tại
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
+  };
+
   const handleApproveRequest = (id: number) => {
     setRequestsData(prev => 
       prev.map(request => 
         request.id === id 
-          ? { ...request, status: "approved" } 
+          ? { 
+              ...request, 
+              status: "approved",
+              actionTime: getCurrentDateTime(),
+              actionBy: "Nguyễn Văn A" // Giả định người dùng hiện tại
+            } 
           : request
       )
     );
@@ -96,7 +115,12 @@ const Requests = () => {
     setRequestsData(prev => 
       prev.map(request => 
         request.id === id 
-          ? { ...request, status: "rejected" } 
+          ? { 
+              ...request, 
+              status: "rejected",
+              actionTime: getCurrentDateTime(),
+              actionBy: "Nguyễn Văn A" // Giả định người dùng hiện tại
+            } 
           : request
       )
     );
