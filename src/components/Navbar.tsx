@@ -2,11 +2,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "./ThemeToggle";
-import { Bell, Menu, X } from "lucide-react";
+import { Bell } from "lucide-react";
 
-export const Navbar = () => {
+export const Navbar = ({ children }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Handle scroll effect
   useEffect(() => {
@@ -21,21 +20,24 @@ export const Navbar = () => {
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled || mobileMenuOpen
-          ? "py-3 backdrop-blur-md bg-background/90 shadow-sm"
-          : "py-4 bg-background"
+        isScrolled 
+          ? "py-2 backdrop-blur-md bg-background/90 shadow-sm"
+          : "py-3 bg-background"
       }`}
     >
-      <div className="container max-w-full mx-auto px-6 flex items-center justify-between">
-        <Link 
-          to="/" 
-          className="text-xl font-medium tracking-tight hover:opacity-80 transition-opacity duration-200"
-          aria-label="Home"
-        >
-          Quản lý Nhân sự
-        </Link>
+      <div className="container max-w-full mx-auto px-4 md:px-6 flex items-center justify-between h-14">
+        <div className="flex items-center gap-2">
+          {children}
+          <Link 
+            to="/" 
+            className="text-xl font-medium tracking-tight hover:opacity-80 transition-opacity duration-200 hidden md:block"
+            aria-label="Home"
+          >
+            Quản lý Nhân sự
+          </Link>
+        </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3 md:space-x-4">
           <button className="relative p-2 rounded-full hover:bg-accent transition-colors">
             <Bell size={20} />
             <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full"></span>
@@ -52,18 +54,6 @@ export const Navbar = () => {
               NA
             </div>
           </div>
-
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 text-foreground md:hidden"
-            aria-label={mobileMenuOpen ? "Đóng menu" : "Mở menu"}
-          >
-            {mobileMenuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
-          </button>
         </div>
       </div>
     </header>

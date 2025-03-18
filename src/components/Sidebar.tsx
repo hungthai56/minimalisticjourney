@@ -4,15 +4,38 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Briefcase, Clock, FilePlus, Home, Menu, Users, UserPlus } from "lucide-react";
+import { 
+  Briefcase, 
+  Clock, 
+  FilePlus, 
+  Home, 
+  Menu, 
+  Users, 
+  UserPlus,
+  PanelLeft
+} from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { 
+  Sheet, 
+  SheetContent, 
+  SheetTrigger 
+} from "@/components/ui/sheet";
 import { LogoutButton } from "./LogoutButton";
 import { usePermissions } from "@/hooks/use-permissions";
+import {
+  Sidebar as ShadcnSidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 
 export const MainNav = () => {
   const location = useLocation();
-  const isMobile = useIsMobile();
   const { isAdmin } = usePermissions();
   
   // Sidebar navigation items
@@ -55,21 +78,22 @@ export const MainNav = () => {
   );
 
   return (
-    <nav className="flex gap-2 flex-col">
+    <SidebarMenu>
       {filteredItems.map((item) => (
-        <Link
-          key={item.href}
-          to={item.href}
-          className={cn(
-            "flex items-center gap-x-2 text-muted-foreground font-medium p-2 rounded-md hover:text-foreground hover:bg-secondary transition-colors",
-            location.pathname === item.href && "bg-secondary text-foreground"
-          )}
-        >
-          {item.icon}
-          <span>{item.title}</span>
-        </Link>
+        <SidebarMenuItem key={item.href}>
+          <SidebarMenuButton 
+            asChild 
+            isActive={location.pathname === item.href}
+            tooltip={item.title}
+          >
+            <Link to={item.href}>
+              {item.icon}
+              <span>{item.title}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
       ))}
-    </nav>
+    </SidebarMenu>
   );
 };
 
@@ -93,9 +117,17 @@ export const MobileNav = () => {
           <span className="sr-only">Toggle Menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="flex flex-col pr-0">
-        <MainNav />
-        <div className="mt-auto flex items-center justify-between p-2">
+      <SheetContent side="left" className="flex flex-col pr-0 w-72 p-0">
+        <div className="flex h-16 items-center px-4 border-b">
+          <Link to="/" className="flex items-center space-x-2">
+            <Clock className="h-6 w-6" />
+            <span className="text-lg font-bold">HR Management</span>
+          </Link>
+        </div>
+        <ScrollArea className="flex-1 py-4 px-4">
+          <MainNav />
+        </ScrollArea>
+        <div className="mt-auto flex items-center justify-between p-4 border-t">
           <div className="text-xs text-muted-foreground">
             Phiên bản 1.0.0
           </div>
@@ -114,20 +146,30 @@ export const Sidebar = () => {
   }
 
   return (
-    <div className="hidden md:flex h-screen w-64 flex-col overflow-hidden border-r bg-background px-3 py-4">
-      <Link to="/" className="flex h-9 items-center space-x-2 px-2">
-        <Clock className="h-6 w-6" />
-        <span className="text-lg font-bold">HR Management</span>
-      </Link>
-      <ScrollArea className="flex-1 py-4">
+    <ShadcnSidebar className="hidden md:flex border-r">
+      <SidebarHeader className="flex h-16 items-center px-4">
+        <Link to="/" className="flex items-center space-x-2">
+          <Clock className="h-6 w-6" />
+          <span className="text-lg font-bold">HR Management</span>
+        </Link>
+      </SidebarHeader>
+      <SidebarContent className="px-4">
         <MainNav />
-      </ScrollArea>
-      <div className="flex items-center justify-between p-2 mt-auto">
+      </SidebarContent>
+      <SidebarFooter className="flex items-center justify-between p-4 mt-auto">
         <div className="text-xs text-muted-foreground">
           Phiên bản 1.0.0
         </div>
         <LogoutButton />
-      </div>
-    </div>
+      </SidebarFooter>
+    </ShadcnSidebar>
+  );
+};
+
+export const ResponsiveSidebar = () => {
+  return (
+    <SidebarProvider defaultOpen={true}>
+      <Sidebar />
+    </SidebarProvider>
   );
 };
