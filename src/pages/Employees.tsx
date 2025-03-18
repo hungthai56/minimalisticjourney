@@ -13,7 +13,13 @@ import { Employee, initialEmployeeData } from "@/types/employee";
 import { EmployeeSearch } from "@/components/employees/EmployeeSearch";
 import { EmployeeTable } from "@/components/employees/EmployeeTable";
 import { EmployeePagination } from "@/components/employees/EmployeePagination";
-import { createEmployee, updateEmployee, filterEmployees, paginateEmployees } from "@/utils/employeeUtils";
+import { 
+  createEmployee, 
+  updateEmployee, 
+  filterEmployees, 
+  paginateEmployees,
+  updateEmployeeLeaveDays 
+} from "@/utils/employeeUtils";
 
 const Employees = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,6 +69,15 @@ const Employees = () => {
     });
   };
 
+  // New function to handle updating leave days
+  const handleUpdateLeaveDays = (id: number, leaveDays: number) => {
+    setEmployeeData(prev => updateEmployeeLeaveDays(prev, id, leaveDays));
+    toast({
+      title: "Cập nhật ngày phép thành công",
+      description: "Số ngày phép còn lại đã được cập nhật"
+    });
+  };
+
   // Handle filter changes
   const handleStatusFilterChange = (status: string) => {
     setStatusFilter(status);
@@ -102,6 +117,7 @@ const Employees = () => {
             employees={paginatedEmployees}
             onUpdateEmployee={handleUpdateEmployee}
             onDeleteEmployee={handleDeleteEmployee}
+            onUpdateLeaveDays={handleUpdateLeaveDays}
           />
           
           <EmployeePagination
