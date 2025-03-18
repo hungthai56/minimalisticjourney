@@ -12,12 +12,20 @@ const ProtectedRoute = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   
   useEffect(() => {
     // Kiểm tra xác thực từ localStorage
     const checkAuth = () => {
-      const user = localStorage.getItem("user");
-      setIsAuthenticated(!!user);
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        setIsAuthenticated(true);
+        setUserRole(user.role);
+      } else {
+        setIsAuthenticated(false);
+        setUserRole(null);
+      }
     };
     
     checkAuth();
@@ -34,6 +42,9 @@ const ProtectedRoute = () => {
 
   // Export the logout function for use in other components
   (window as any).handleLogout = handleLogout;
+  
+  // Allow access to role-specific data for use in other components
+  (window as any).getUserRole = () => userRole;
   
   // Đang kiểm tra xác thực
   if (isAuthenticated === null) {

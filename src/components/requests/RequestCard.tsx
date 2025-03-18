@@ -1,101 +1,103 @@
 
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle2, XCircle, Clock, CalendarRange, Timer } from "lucide-react";
 import { Request } from "@/types/request";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, XCircle, Clock, Calendar, Clock3, AlarmClock } from "lucide-react";
 
 interface RequestCardProps {
   request: Request;
   onApprove: (id: number) => void;
   onReject: (id: number) => void;
+  showActions: boolean;
 }
 
-export const RequestCard = ({ request, onApprove, onReject }: RequestCardProps) => {
+export const RequestCard = ({ request, onApprove, onReject, showActions }: RequestCardProps) => {
+  const getStatusBadge = () => {
+    switch (request.status) {
+      case "approved":
+        return <Badge className="bg-green-500">Đã duyệt</Badge>;
+      case "rejected":
+        return <Badge variant="destructive">Từ chối</Badge>;
+      case "pending":
+      default:
+        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300">Chờ duyệt</Badge>;
+    }
+  };
+
   return (
-    <Card className="overflow-hidden">
-      <div className={cn(
-        "h-2",
-        request.status === "pending" ? "bg-yellow-500" :
-        request.status === "approved" ? "bg-green-500" : "bg-red-500"
-      )} />
-      <CardContent className="pt-6">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="font-semibold">{request.employeeName}</h3>
-            <p className="text-sm text-muted-foreground">{request.type}</p>
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <div className="space-y-1">
+            <CardTitle className="text-base">{request.employeeName}</CardTitle>
+            <CardDescription>{request.type}</CardDescription>
           </div>
-          <div className={cn(
-            "px-2 py-1 text-xs rounded-full flex items-center",
-            request.status === "pending" ? "bg-yellow-100 text-yellow-800" :
-            request.status === "approved" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-          )}>
-            {request.status === "pending" && <Clock className="h-3 w-3 mr-1" />}
-            {request.status === "approved" && <CheckCircle2 className="h-3 w-3 mr-1" />}
-            {request.status === "rejected" && <XCircle className="h-3 w-3 mr-1" />}
-            {request.status === "pending" ? "Đang chờ" :
-             request.status === "approved" ? "Đã duyệt" : "Từ chối"}
-          </div>
+          {getStatusBadge()}
+        </div>
+      </CardHeader>
+      <CardContent className="pb-2 text-sm space-y-2">
+        <div className="flex items-center">
+          <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+          <span>
+            <span className="font-medium">Thời gian: </span>
+            {request.startDate} {request.startDate !== request.endDate && `- ${request.endDate}`}
+          </span>
         </div>
         
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center text-sm">
-            <CalendarRange className="h-4 w-4 mr-2 text-muted-foreground" />
+        {(request.startTime || request.endTime) && (
+          <div className="flex items-center">
+            <Clock3 className="h-4 w-4 mr-2 text-muted-foreground" />
             <span>
-              {request.startDate} {request.endDate !== request.startDate ? `→ ${request.endDate}` : ""}
+              <span className="font-medium">Giờ: </span>
+              {request.startTime} - {request.endTime}
             </span>
-          </div>
-          
-          <div className="flex items-center text-sm">
-            <Timer className="h-4 w-4 mr-2 text-muted-foreground" />
-            <span>
-              {request.startTime} → {request.endTime}
-            </span>
-          </div>
-          
-          <div className="border-l-2 pl-4 py-1 text-sm">
-            {request.reason}
-          </div>
-        </div>
-        
-        {(request.status === "approved" || request.status === "rejected") && request.actionTime && (
-          <div className="bg-gray-50 p-2 rounded-md text-xs mb-4">
-            <p>
-              <span className="font-medium">
-                {request.status === "approved" ? "Duyệt bởi" : "Từ chối bởi"}:
-              </span> {request.actionBy}
-            </p>
-            <p>
-              <span className="font-medium">Thời gian:</span> {request.actionTime}
-            </p>
           </div>
         )}
         
-        <div className="flex justify-between pt-4 border-t">
-          <span className="text-xs text-muted-foreground">Tạo lúc: {request.createdAt}</span>
-          {request.status === "pending" && (
-            <div className="flex space-x-2">
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="h-8"
-                onClick={() => onReject(request.id)}
-              >
-                <XCircle className="h-3 w-3 mr-1" />
-                Từ chối
-              </Button>
-              <Button 
-                size="sm" 
-                className="h-8"
-                onClick={() => onApprove(request.id)}
-              >
-                <CheckCircle2 className="h-3 w-3 mr-1" />
-                Duyệt
-              </Button>
-            </div>
-          )}
+        <div className="border-t pt-2">
+          <p className="text-sm text-muted-foreground">Lý do: {request.reason}</p>
         </div>
+        
+        {request.status !== "pending" && request.actionTime && (
+          <div className="border-t pt-2 flex flex-col gap-1">
+            <div className="flex items-center">
+              <AlarmClock className="h-4 w-4 mr-2 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {request.status === "approved" ? "Thời gian duyệt:" : "Thời gian từ chối:"} {request.actionTime}
+              </span>
+            </div>
+            {request.actionBy && (
+              <span className="text-sm text-muted-foreground">
+                Người {request.status === "approved" ? "duyệt" : "từ chối"}: {request.actionBy}
+              </span>
+            )}
+          </div>
+        )}
       </CardContent>
+      
+      {showActions && (
+        <CardFooter className="pt-0 justify-end gap-2">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="text-green-600 bg-green-50 border-green-200 hover:bg-green-100"
+            onClick={() => onApprove(request.id)}
+          >
+            <CheckCircle className="h-4 w-4 mr-1" />
+            Duyệt
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="text-red-600 bg-red-50 border-red-200 hover:bg-red-100"
+            onClick={() => onReject(request.id)}  
+          >
+            <XCircle className="h-4 w-4 mr-1" />
+            Từ chối
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 };

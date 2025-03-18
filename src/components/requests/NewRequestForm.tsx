@@ -1,179 +1,213 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DialogClose,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { initialEmployeeData } from "@/types/employee";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
+// Define the form schema
+const formSchema = z.object({
+  employeeName: z.string().min(1, "Họ tên không được để trống"),
+  type: z.enum(["leave", "out"]),
+  startDate: z.string().min(1, "Ngày bắt đầu không được để trống"),
+  endDate: z.string().min(1, "Ngày kết thúc không được để trống"),
+  startTime: z.string().min(1, "Giờ bắt đầu không được để trống"),
+  endTime: z.string().min(1, "Giờ kết thúc không được để trống"),
+  reason: z.string().min(1, "Lý do không được để trống")
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface NewRequestFormProps {
-  onSubmit: (formData: any) => void;
+  onSubmit: (data: FormValues) => void;
+  disableEmployeeSelection?: boolean;
 }
 
-export const NewRequestForm = ({ onSubmit }: NewRequestFormProps) => {
-  const [newRequest, setNewRequest] = useState({
-    employeeName: "Nguyễn Văn A", // Default employee
-    type: "leave",
-    startDate: "",
-    endDate: "",
-    startTime: "08:00", // Giờ mặc định
-    endTime: "17:30",   // Giờ mặc định
-    reason: ""
+export const NewRequestForm = ({ onSubmit, disableEmployeeSelection = false }: NewRequestFormProps) => {
+  const currentUserName = (() => {
+    const userStr = localStorage.getItem("user");
+    if (!userStr) return "";
+    const user = JSON.parse(userStr);
+    return user.name;
+  })();
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      employeeName: currentUserName,
+      type: "leave",
+      startDate: "",
+      endDate: "",
+      startTime: "08:00",
+      endTime: "17:30",
+      reason: ""
+    }
   });
+
+  const type = form.watch("type");
   
-  // Format date for input fields
-  const formatDateForInput = (date = new Date()) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  // Validate form data and submit
+  const handleFormSubmit = (data: FormValues) => {
+    // Validate dates
+    const startDate = new Date(data.startDate);
+    const endDate = new Date(data.endDate);
+    
+    if (endDate < startDate) {
+      form.setError("endDate", {
+        type: "manual",
+        message: "Ngày kết thúc phải sau ngày bắt đầu"
+      });
+      return;
+    }
+    
+    onSubmit(data);
   };
   
-  // Set default dates when component mounts
-  useEffect(() => {
-    const today = new Date();
-    setNewRequest(prev => ({
-      ...prev,
-      startDate: formatDateForInput(today),
-      endDate: formatDateForInput(today)
-    }));
-  }, []);
+  // Get today's date for min attribute
+  const today = new Date().toISOString().split('T')[0];
   
-  // Handle form changes
-  const handleRequestFormChange = (field: string, value: string) => {
-    setNewRequest(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // Tìm số ngày phép còn lại của nhân viên
-  const selectedEmployee = initialEmployeeData.find(emp => emp.name === newRequest.employeeName);
-  const remainingLeaveDays = selectedEmployee?.remainingLeaveDays || 0;
-
-  // Handle form submission
-  const handleSubmit = () => {
-    onSubmit(newRequest);
-  };
-
   return (
-    <>
-      <div className="grid gap-4 py-4">
-        <div className="grid gap-2">
-          <Label htmlFor="request-type">Loại yêu cầu</Label>
-          <Select 
-            value={newRequest.type}
-            onValueChange={(value) => handleRequestFormChange("type", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Chọn loại yêu cầu" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="leave">Nghỉ phép</SelectItem>
-              <SelectItem value="out">Ra ngoài</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4 mt-6">
+        <FormField
+          control={form.control}
+          name="employeeName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Họ tên</FormLabel>
+              <FormControl>
+                <Input 
+                  placeholder="Nhập họ tên" 
+                  {...field} 
+                  disabled={disableEmployeeSelection}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
-        <div className="grid grid-cols-2 gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="start-date">Ngày bắt đầu</Label>
-            <Input 
-              id="start-date" 
-              type="date" 
-              value={newRequest.startDate}
-              onChange={(e) => handleRequestFormChange("startDate", e.target.value)}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="end-date">Ngày kết thúc</Label>
-            <Input 
-              id="end-date" 
-              type="date" 
-              value={newRequest.endDate}
-              onChange={(e) => handleRequestFormChange("endDate", e.target.value)}
-            />
-          </div>
-        </div>
+        <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <FormLabel>Loại yêu cầu</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="flex flex-col space-y-1"
+                >
+                  <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="leave" />
+                    </FormControl>
+                    <FormLabel className="font-normal">
+                      Nghỉ phép
+                    </FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-3 space-y-0">
+                    <FormControl>
+                      <RadioGroupItem value="out" />
+                    </FormControl>
+                    <FormLabel className="font-normal">
+                      Ra ngoài
+                    </FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
-        <div className="grid grid-cols-2 gap-4">
-          <div className="grid gap-2">
-            <Label htmlFor="start-time">Giờ bắt đầu</Label>
-            <Input 
-              id="start-time" 
-              type="time" 
-              value={newRequest.startTime}
-              onChange={(e) => handleRequestFormChange("startTime", e.target.value)}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="end-time">Giờ kết thúc</Label>
-            <Input 
-              id="end-time" 
-              type="time" 
-              value={newRequest.endTime}
-              onChange={(e) => handleRequestFormChange("endTime", e.target.value)}
-            />
-          </div>
-        </div>
-        
-        <div className="grid gap-2">
-          <Label htmlFor="employee">Nhân viên</Label>
-          <Select 
-            value={newRequest.employeeName}
-            onValueChange={(value) => handleRequestFormChange("employeeName", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Chọn nhân viên" />
-            </SelectTrigger>
-            <SelectContent>
-              {initialEmployeeData
-                .filter(emp => emp.status === "Đang làm việc")
-                .map(emp => (
-                  <SelectItem key={emp.id} value={emp.name}>{emp.name}</SelectItem>
-                ))
-              }
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="grid gap-2">
-          <Label htmlFor="reason">Lý do</Label>
-          <Textarea 
-            id="reason" 
-            placeholder="Nhập lý do..." 
-            value={newRequest.reason}
-            onChange={(e) => handleRequestFormChange("reason", e.target.value)}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="startDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Ngày bắt đầu</FormLabel>
+                <FormControl>
+                  <Input type="date" min={today} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="endDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Ngày kết thúc</FormLabel>
+                <FormControl>
+                  <Input type="date" min={form.watch("startDate") || today} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
           />
         </div>
         
-        {newRequest.type === "leave" && (
-          <div className="py-2 px-3 bg-blue-50 rounded-md flex items-center">
-            <Calendar className="h-5 w-5 text-blue-500 mr-2" />
-            <div className="text-sm text-blue-700">
-              <p className="font-medium">Số ngày phép còn lại: {remainingLeaveDays} ngày</p>
-            </div>
-          </div>
-        )}
-      </div>
-      <DialogFooter>
-        <DialogClose asChild>
-          <Button variant="outline">Hủy</Button>
-        </DialogClose>
-        <Button onClick={handleSubmit}>Gửi yêu cầu</Button>
-      </DialogFooter>
-    </>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="startTime"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Giờ bắt đầu</FormLabel>
+                <FormControl>
+                  <Input type="time" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="endTime"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Giờ kết thúc</FormLabel>
+                <FormControl>
+                  <Input type="time" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <FormField
+          control={form.control}
+          name="reason"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Lý do</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder={type === "leave" ? "Nghỉ phép thường niên..." : "Gặp khách hàng..."}
+                  className="resize-none" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div className="flex justify-end">
+          <Button type="submit">Gửi yêu cầu</Button>
+        </div>
+      </form>
+    </Form>
   );
 };

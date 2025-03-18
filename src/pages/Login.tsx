@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { User, initialUsersData } from "@/types/user";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -15,19 +16,32 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Initialize users in localStorage if not already set
+  useEffect(() => {
+    if (!localStorage.getItem("users")) {
+      localStorage.setItem("users", JSON.stringify(initialUsersData));
+    }
+  }, []);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    // Giả lập xác thực
+    // Get users from localStorage
+    const users: User[] = JSON.parse(localStorage.getItem("users") || JSON.stringify(initialUsersData));
+    
+    // Find matching user
+    const user = users.find(user => user.username === username && user.password === password);
+    
     setTimeout(() => {
-      if (username === "admin" && password === "admin") {
-        // Lưu thông tin người dùng vào localStorage (trong thực tế sẽ lưu token)
-        localStorage.setItem("user", JSON.stringify({ username, role: "admin" }));
+      if (user) {
+        // Save logged in user info (excluding password)
+        const { password, ...userInfo } = user;
+        localStorage.setItem("user", JSON.stringify(userInfo));
         
         toast({
           title: "Đăng nhập thành công",
-          description: "Chào mừng bạn trở lại với hệ thống quản lý nhân sự",
+          description: `Chào mừng ${user.name} trở lại với hệ thống quản lý nhân sự`,
         });
         
         navigate("/");
@@ -94,13 +108,19 @@ const Login = () => {
                   "Đăng nhập"
                 )}
               </Button>
+              <div className="text-center text-sm text-muted-foreground">
+                <span>Chưa có tài khoản? </span>
+                <Button variant="link" className="p-0" onClick={() => navigate("/register")}>
+                  Đăng ký
+                </Button>
+              </div>
             </div>
           </form>
         </CardContent>
         <CardFooter className="text-center text-sm text-muted-foreground">
           <p className="w-full">
-            Hãy sử dụng tên đăng nhập <span className="font-medium">admin</span> và mật khẩu{" "}
-            <span className="font-medium">admin</span> để đăng nhập demo.
+            Sử dụng tên đăng nhập <span className="font-medium">admin</span> và mật khẩu{" "}
+            <span className="font-medium">admin</span> để đăng nhập với quyền quản trị.
           </p>
         </CardFooter>
       </Card>

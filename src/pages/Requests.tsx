@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Dialog,
   DialogContent,
@@ -21,19 +21,41 @@ import {
   ArrowLeftRight,
   Clock,
   CheckCircle2,
-  XCircle
+  XCircle,
+  AlertCircle
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createNewRequest, exportRequestsToExcel } from "@/utils/requestUtils";
 import { Request, initialRequestsData } from "@/types/request";
 import { NewRequestForm } from "@/components/requests/NewRequestForm";
 import { RequestList } from "@/components/requests/RequestList";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const Requests = () => {
   const [tab, setTab] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [openNewRequestDialog, setOpenNewRequestDialog] = useState(false);
-  const [requestsData, setRequestsData] = useState<Request[]>(initialRequestsData);
+  const [requestsData, setRequestsData] = useState<Request[]>([]);
   const { toast } = useToast();
+  const { isAdmin, getCurrentUserName } = usePermissions();
+  
+  // Load requests from localStorage or use initial data
+  useEffect(() => {
+    const savedRequests = localStorage.getItem("requests");
+    if (savedRequests) {
+      setRequestsData(JSON.parse(savedRequests));
+    } else {
+      // Initialize with default data
+      setRequestsData(initialRequestsData);
+      localStorage.setItem("requests", JSON.stringify(initialRequestsData));
+    }
+  }, []);
+
+  // Save requests to localStorage whenever they change
+  useEffect(() => {
+    if (requestsData.length > 0) {
+      localStorage.setItem("requests", JSON.stringify(requestsData));
+    }
+  }, [requestsData]);
   
   // Submit new request
   const handleSubmitRequest = (formData: any) => {
@@ -44,7 +66,7 @@ const Requests = () => {
     };
     
     const formattedRequest = {
-      employeeName: formData.employeeName,
+      employeeName: getCurrentUserName() || formData.employeeName,
       type: formData.type === "leave" ? "Nghỉ phép" : "Ra ngoài",
       startDate: formatDisplayDate(formData.startDate),
       endDate: formatDisplayDate(formData.endDate),
@@ -72,11 +94,24 @@ const Requests = () => {
     });
   };
   
+  // Filter requests based on tab and user role
   const filteredRequests = requestsData.filter(request => {
-    if (tab === "all") return true;
-    if (tab === "pending") return request.status === "pending";
-    if (tab === "approved") return request.status === "approved";
-    if (tab === "rejected") return request.status === "rejected";
+    // Admin can see all requests
+    if (isAdmin()) {
+      if (tab === "all") return true;
+      if (tab === "pending") return request.status === "pending";
+      if (tab === "approved") return request.status === "approved";
+      if (tab === "rejected") return request.status === "rejected";
+    } else {
+      // Regular users can only see their own requests
+      const currentUserName = getCurrentUserName();
+      if (request.employeeName !== currentUserName) return false;
+      
+      if (tab === "all") return true;
+      if (tab === "pending") return request.status === "pending";
+      if (tab === "approved") return request.status === "approved";
+      if (tab === "rejected") return request.status === "rejected";
+    }
     return true;
   });
 
@@ -93,6 +128,16 @@ const Requests = () => {
   };
 
   const handleApproveRequest = (id: number) => {
+    // Only admins can approve requests
+    if (!isAdmin()) {
+      toast({
+        title: "Không có quyền",
+        description: "Bạn không có quyền duyệt yêu cầu.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setRequestsData(prev => 
       prev.map(request => 
         request.id === id 
@@ -100,7 +145,7 @@ const Requests = () => {
               ...request, 
               status: "approved",
               actionTime: getCurrentDateTime(),
-              actionBy: "Nguyễn Văn A" // Giả định người dùng hiện tại
+              actionBy: getCurrentUserName() || "Admin" 
             } 
           : request
       )
@@ -112,6 +157,16 @@ const Requests = () => {
   };
 
   const handleRejectRequest = (id: number) => {
+    // Only admins can reject requests
+    if (!isAdmin()) {
+      toast({
+        title: "Không có quyền",
+        description: "Bạn không có quyền từ chối yêu cầu.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setRequestsData(prev => 
       prev.map(request => 
         request.id === id 
@@ -119,7 +174,7 @@ const Requests = () => {
               ...request, 
               status: "rejected",
               actionTime: getCurrentDateTime(),
-              actionBy: "Nguyễn Văn A" // Giả định người dùng hiện tại
+              actionBy: getCurrentUserName() || "Admin"
             } 
           : request
       )
@@ -149,7 +204,10 @@ const Requests = () => {
                 Điền thông tin để tạo yêu cầu nghỉ phép hoặc ra ngoài
               </DialogDescription>
             </DialogHeader>
-            <NewRequestForm onSubmit={handleSubmitRequest} />
+            <NewRequestForm 
+              onSubmit={handleSubmitRequest} 
+              disableEmployeeSelection={!isAdmin()} 
+            />
           </DialogContent>
         </Dialog>
       </div>
@@ -175,10 +233,12 @@ const Requests = () => {
             </TabsTrigger>
           </TabsList>
           
-          <Button variant="outline" size="sm" onClick={handleExportReport}>
-            <FileDown className="h-4 w-4 mr-2" />
-            Xuất báo cáo
-          </Button>
+          {isAdmin() && (
+            <Button variant="outline" size="sm" onClick={handleExportReport}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Xuất báo cáo
+            </Button>
+          )}
         </div>
         
         <TabsContent value="all" className="mt-0">
@@ -187,6 +247,7 @@ const Requests = () => {
             tabType="all"
             onApprove={handleApproveRequest}
             onReject={handleRejectRequest}
+            isAdmin={isAdmin()}
           />
         </TabsContent>
         
@@ -196,6 +257,7 @@ const Requests = () => {
             tabType="pending"
             onApprove={handleApproveRequest}
             onReject={handleRejectRequest}
+            isAdmin={isAdmin()}
           />
         </TabsContent>
         
@@ -205,6 +267,7 @@ const Requests = () => {
             tabType="approved"
             onApprove={handleApproveRequest}
             onReject={handleRejectRequest}
+            isAdmin={isAdmin()}
           />
         </TabsContent>
         
@@ -214,6 +277,7 @@ const Requests = () => {
             tabType="rejected"
             onApprove={handleApproveRequest}
             onReject={handleRejectRequest}
+            isAdmin={isAdmin()}
           />
         </TabsContent>
       </Tabs>
