@@ -5,14 +5,14 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Briefcase, Clock, FilePlus, Home, Menu, Users, UserPlus } from "lucide-react";
-import { useMobile } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LogoutButton } from "./LogoutButton";
 import { usePermissions } from "@/hooks/use-permissions";
 
 export const MainNav = () => {
   const location = useLocation();
-  const { isMobile } = useMobile();
+  const isMobile = useIsMobile();
   const { isAdmin } = usePermissions();
   
   // Sidebar navigation items
@@ -107,7 +107,7 @@ export const MobileNav = () => {
 };
 
 export const Sidebar = () => {
-  const { isMobile } = useMobile();
+  const isMobile = useIsMobile();
 
   if (isMobile) {
     return null;
