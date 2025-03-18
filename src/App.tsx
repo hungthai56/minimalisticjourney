@@ -14,6 +14,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import UserManagement from "./pages/UserManagement";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="/employees" element={<Employees />} />
               <Route path="/requests" element={<Requests />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/users" element={<UserManagement />} />
               <Route path="*" element={<NotFound />} />
             </Route>
           </Route>

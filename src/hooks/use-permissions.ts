@@ -31,11 +31,17 @@ export const usePermissions = () => {
     return user?.name;
   };
 
+  const getUserRole = () => {
+    const user = getUserInfo();
+    return user?.role;
+  };
+
   return {
     isAdmin,
     isUser,
     getCurrentUserId,
     getCurrentUsername,
-    getCurrentUserName
+    getCurrentUserName,
+    getUserRole
   };
 };
