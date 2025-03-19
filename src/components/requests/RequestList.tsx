@@ -8,10 +8,11 @@ interface RequestListProps {
   tabType: "all" | "pending" | "approved" | "rejected";
   onApprove: (id: number) => void;
   onReject: (id: number) => void;
+  onDelete: (id: number) => void;
   isAdmin: boolean;
 }
 
-export const RequestList = ({ requests, tabType, onApprove, onReject, isAdmin }: RequestListProps) => {
+export const RequestList = ({ requests, tabType, onApprove, onReject, onDelete, isAdmin }: RequestListProps) => {
   if (requests.length === 0) {
     return <EmptyRequests type={tabType} />;
   }
@@ -24,7 +25,9 @@ export const RequestList = ({ requests, tabType, onApprove, onReject, isAdmin }:
           request={request}
           onApprove={onApprove}
           onReject={onReject}
+          onDelete={onDelete}
           showActions={isAdmin && request.status === "pending"}
+          isAdmin={isAdmin}
         />
       ))}
     </div>

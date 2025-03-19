@@ -1,4 +1,3 @@
-
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 import { Request } from "@/types/request";
@@ -32,9 +31,43 @@ export const createNewRequest = (
   };
 };
 
-export const exportRequestsToExcel = (requests: Request[], fileName: string = "requests-report") => {
+// Convert date string format from DD/MM/YYYY to Date object
+export const parseDisplayDate = (displayDate: string): Date => {
+  const [day, month, year] = displayDate.split('/').map(Number);
+  return new Date(year, month - 1, day);
+};
+
+export const exportRequestsToExcel = (
+  requests: Request[], 
+  fileName: string = "requests-report",
+  dateFrom?: string,
+  dateTo?: string
+) => {
+  // Filter by date range if provided
+  let filteredRequests = [...requests];
+  
+  if (dateFrom || dateTo) {
+    filteredRequests = requests.filter(request => {
+      const requestDate = parseDisplayDate(request.createdAt);
+      
+      if (dateFrom && dateTo) {
+        const fromDate = parseDisplayDate(dateFrom);
+        const toDate = parseDisplayDate(dateTo);
+        return requestDate >= fromDate && requestDate <= toDate;
+      } else if (dateFrom) {
+        const fromDate = parseDisplayDate(dateFrom);
+        return requestDate >= fromDate;
+      } else if (dateTo) {
+        const toDate = parseDisplayDate(dateTo);
+        return requestDate <= toDate;
+      }
+      
+      return true;
+    });
+  }
+
   // Transform data for Excel
-  const data = requests.map(request => ({
+  const data = filteredRequests.map(request => ({
     'ID': request.id,
     'Nhân viên': request.employeeName,
     'Loại yêu cầu': request.type,
@@ -80,4 +113,9 @@ export const exportRequestsToExcel = (requests: Request[], fileName: string = "r
   
   // Save the file
   saveAs(data_blob, `${fileName}.xlsx`);
+};
+
+// Delete a request by ID
+export const deleteRequest = (id: number, requests: Request[]): Request[] => {
+  return requests.filter(request => request.id !== id);
 };

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   Dialog,
   DialogContent,
@@ -9,6 +9,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Tabs,
   TabsContent,
@@ -22,19 +24,27 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  AlertCircle
+  Calendar
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { createNewRequest, exportRequestsToExcel } from "@/utils/requestUtils";
+import { createNewRequest, exportRequestsToExcel, deleteRequest } from "@/utils/requestUtils";
 import { Request, initialRequestsData } from "@/types/request";
 import { NewRequestForm } from "@/components/requests/NewRequestForm";
 import { RequestList } from "@/components/requests/RequestList";
 import { usePermissions } from "@/hooks/use-permissions";
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const Requests = () => {
   const [tab, setTab] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [openNewRequestDialog, setOpenNewRequestDialog] = useState(false);
+  const [openExportDialog, setOpenExportDialog] = useState(false);
   const [requestsData, setRequestsData] = useState<Request[]>([]);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const { toast } = useToast();
   const { isAdmin, getCurrentUserName } = usePermissions();
   
@@ -85,12 +95,23 @@ const Requests = () => {
     });
   };
   
-  // Export requests to Excel
+  // Export requests to Excel with date filtering
   const handleExportReport = () => {
-    exportRequestsToExcel(filteredRequests, `requests-report-${tab}`);
+    exportRequestsToExcel(filteredRequests, `requests-report-${tab}`, dateFrom, dateTo);
     toast({
       title: "Xuất báo cáo thành công",
       description: "Báo cáo đã được tải xuống."
+    });
+    setOpenExportDialog(false);
+  };
+
+  // Delete a request
+  const handleDeleteRequest = (id: number) => {
+    setRequestsData(prev => deleteRequest(id, prev));
+    toast({
+      title: "Xóa yêu cầu thành công",
+      description: "Yêu cầu đã được xóa khỏi hệ thống.",
+      variant: "destructive"
     });
   };
   
@@ -186,6 +207,13 @@ const Requests = () => {
     });
   };
 
+  // Format date for input field (DD/MM/YYYY -> YYYY-MM-DD)
+  const formatDateForInput = (dateString: string) => {
+    if (!dateString) return "";
+    const [day, month, year] = dateString.split('/');
+    return `${year}-${month}-${day}`;
+  };
+
   return (
     <div className="container max-w-7xl mx-auto mt-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
@@ -234,10 +262,62 @@ const Requests = () => {
           </TabsList>
           
           {isAdmin() && (
-            <Button variant="outline" size="sm" onClick={handleExportReport}>
-              <FileDown className="h-4 w-4 mr-2" />
-              Xuất báo cáo
-            </Button>
+            <Dialog open={openExportDialog} onOpenChange={setOpenExportDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Xuất báo cáo
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Xuất báo cáo</DialogTitle>
+                  <DialogDescription>
+                    Chọn khoảng thời gian để xuất báo cáo
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="dateFrom">Từ ngày (DD/MM/YYYY)</Label>
+                    <Input
+                      id="dateFrom"
+                      type="date"
+                      value={formatDateForInput(dateFrom)}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          const [year, month, day] = e.target.value.split('-');
+                          setDateFrom(`${day}/${month}/${year}`);
+                        } else {
+                          setDateFrom("");
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="dateTo">Đến ngày (DD/MM/YYYY)</Label>
+                    <Input
+                      id="dateTo"
+                      type="date"
+                      value={formatDateForInput(dateTo)}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          const [year, month, day] = e.target.value.split('-');
+                          setDateTo(`${day}/${month}/${year}`);
+                        } else {
+                          setDateTo("");
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={handleExportReport}>
+                    <FileDown className="h-4 w-4 mr-2" />
+                    Xuất báo cáo
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           )}
         </div>
         
@@ -247,6 +327,7 @@ const Requests = () => {
             tabType="all"
             onApprove={handleApproveRequest}
             onReject={handleRejectRequest}
+            onDelete={handleDeleteRequest}
             isAdmin={isAdmin()}
           />
         </TabsContent>
@@ -257,6 +338,7 @@ const Requests = () => {
             tabType="pending"
             onApprove={handleApproveRequest}
             onReject={handleRejectRequest}
+            onDelete={handleDeleteRequest}
             isAdmin={isAdmin()}
           />
         </TabsContent>
@@ -267,6 +349,7 @@ const Requests = () => {
             tabType="approved"
             onApprove={handleApproveRequest}
             onReject={handleRejectRequest}
+            onDelete={handleDeleteRequest}
             isAdmin={isAdmin()}
           />
         </TabsContent>
@@ -277,6 +360,7 @@ const Requests = () => {
             tabType="rejected"
             onApprove={handleApproveRequest}
             onReject={handleRejectRequest}
+            onDelete={handleDeleteRequest}
             isAdmin={isAdmin()}
           />
         </TabsContent>
