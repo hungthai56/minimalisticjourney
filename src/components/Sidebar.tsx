@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -12,7 +11,9 @@ import {
   Menu, 
   Users, 
   UserPlus,
-  PanelLeft
+  PanelLeft,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
@@ -32,47 +33,48 @@ import {
   SidebarMenuButton,
   SidebarProvider,
   SidebarTrigger,
+  SidebarInset,
+  SidebarRail,
 } from "@/components/ui/sidebar";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 export const MainNav = () => {
   const location = useLocation();
   const { isAdmin } = usePermissions();
   
-  // Sidebar navigation items
   const items = [
     {
       title: "Tổng quan",
       href: "/",
       icon: <Home className="h-5 w-5" />,
-      authRequired: false, // Tất cả đều thấy được
+      authRequired: false,
     },
     {
       title: "Nhân sự",
       href: "/employees",
       icon: <Users className="h-5 w-5" />,
-      authRequired: true, // Chỉ admin thấy được
+      authRequired: true,
     },
     {
       title: "Yêu cầu",
       href: "/requests",
       icon: <FilePlus className="h-5 w-5" />,
-      authRequired: false, // Tất cả đều thấy được
+      authRequired: false,
     },
     {
       title: "Tài khoản",
       href: "/users",
       icon: <UserPlus className="h-5 w-5" />,
-      authRequired: true, // Chỉ admin thấy được
+      authRequired: true,
     },
     {
       title: "Thông tin cá nhân",
       href: "/profile",
       icon: <Briefcase className="h-5 w-5" />,
-      authRequired: false, // Tất cả đều thấy được
+      authRequired: false,
     }
   ];
-  
-  // Filter items based on user role
+
   const filteredItems = items.filter(item => 
     !item.authRequired || (item.authRequired && isAdmin())
   );
@@ -140,6 +142,8 @@ export const MobileNav = () => {
 
 export const Sidebar = () => {
   const isMobile = useIsMobile();
+  const { state, toggleSidebar } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   if (isMobile) {
     return null;
@@ -160,8 +164,20 @@ export const Sidebar = () => {
         <div className="text-xs text-muted-foreground">
           Phiên bản 1.0.0
         </div>
-        <LogoutButton />
+        <div className="flex items-center gap-2">
+          <LogoutButton />
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={toggleSidebar} 
+            className="h-8 w-8"
+            title={isCollapsed ? "Mở rộng" : "Thu nhỏ"}
+          >
+            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
+        </div>
       </SidebarFooter>
+      <SidebarRail />
     </ShadcnSidebar>
   );
 };
