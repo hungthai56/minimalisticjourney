@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface RegisterFormProps {
-  onRegister: (username: string, password: string, name: string) => void;
+  onRegister: (username: string, password: string, name: string, email: string) => void;
 }
 
 const RegisterForm = ({ onRegister }: RegisterFormProps) => {
@@ -17,6 +17,7 @@ const RegisterForm = ({ onRegister }: RegisterFormProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -37,7 +38,7 @@ const RegisterForm = ({ onRegister }: RegisterFormProps) => {
     }
 
     // Call the register function
-    onRegister(username, password, name);
+    onRegister(username, password, name, email);
     setLoading(false);
   };
 
@@ -64,6 +65,17 @@ const RegisterForm = ({ onRegister }: RegisterFormProps) => {
                   placeholder="Nguyễn Văn A"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="example@mail.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>

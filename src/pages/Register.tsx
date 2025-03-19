@@ -9,7 +9,7 @@ const Register = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleRegister = (username: string, password: string, name: string) => {
+  const handleRegister = (username: string, password: string, name: string, email: string) => {
     // Check if username already exists
     const existingUsers = JSON.parse(localStorage.getItem("users") || JSON.stringify(initialUsersData));
     const userExists = existingUsers.some((user: User) => user.username === username);
@@ -29,7 +29,8 @@ const Register = () => {
       username,
       password,
       name,
-      role: "user" // Default role for new registrations
+      role: "user", // Default role for new registrations
+      email // Adding the email field
     };
     
     // Save to localStorage
