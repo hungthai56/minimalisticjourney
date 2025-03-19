@@ -146,7 +146,7 @@ export const Sidebar = () => {
   }
 
   return (
-    <ShadcnSidebar className="hidden md:flex border-r">
+    <ShadcnSidebar className="hidden md:flex border-r pt-16">
       <SidebarHeader className="flex h-16 items-center px-4">
         <Link to="/" className="flex items-center space-x-2">
           <Clock className="h-6 w-6" />

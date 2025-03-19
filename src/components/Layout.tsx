@@ -12,9 +12,9 @@ export const Layout = () => {
         <Navbar>
           <MobileNav />
         </Navbar>
-        <div className="flex flex-grow">
+        <div className="flex flex-grow pt-16">
           <ResponsiveSidebar />
-          <SidebarInset className="pt-16 md:pt-20 px-4 md:px-6 lg:px-8 overflow-auto">
+          <SidebarInset className="pt-4 md:pt-6 px-4 md:px-6 lg:px-8 overflow-auto">
             <div className="max-w-6xl mx-auto w-full">
               <PageTransition>
                 <Outlet />
